@@ -15037,7 +15037,8 @@ def main(argv):
                  'jp': 'ja',
                  'kr': 'ko',
                  'sp': 'es',
-                 'tw': 'zh-Hant'}
+                 'tw': 'zh-Hant',
+                 'us': 'en'}
     if not os.path.exists(args.outdir):
         os.mkdir(args.outdir)
     for name, table in tables.items():

@@ -10986,6 +10986,15 @@ class BdatTable(object):
     window.addEventListener("hashchange", offsetAnchor);
     window.setTimeout(offsetAnchor, 1);
 
+    // Sort helper to peek through an anchor tag when getting cell text.
+    function cellText(td) {
+      if (td.childElementCount == 1) {
+        return td.children[0].innerHTML;
+      } else {
+        return td.innerHTML;
+      }
+    }
+
     // Sort a table.  Also updates column header sort indicators.
     // table: <table> element of table to sort
     // column: column index (zero-based)
@@ -11000,23 +11009,22 @@ class BdatTable(object):
           th.classList.add(dir>0 ? "dir-u" : "dir-d");
         }
       }
-      var cmp;
+      var parse, cmp;
       if (numericType == 0) {
-        cmp = function(a, b) {a = parseInt(a.cells[column].innerHTML);
-                              b = parseInt(b.cells[column].innerHTML);
-                              return a<b ? -dir : a>b ? dir : 0};
+        parse = function(a) {return a=="" ? 0 : parseInt(a);}
+        cmp = function(a, b) {return a<b ? -dir : a>b ? dir : 0};
       } else if (numericType == 1) {
-        cmp = function(a, b) {a = parseFloat(a.cells[column].innerHTML);
-                              b = parseFloat(b.cells[column].innerHTML);
-                              return a<b ? -dir : a>b ? dir : 0};
+        parse = function(a) {return a=="" ? 0 : parseFloat(a);}
+        cmp = function(a, b) {return a<b ? -dir : a>b ? dir : 0};
       } else {
+        parse = function(a) {return a;}
         var strcmp = {STR_COMPARE};
-        cmp = function(a, b) {return dir * strcmp(a.cells[column].innerHTML,
-                                                  b.cells[column].innerHTML);}
+        cmp = function(a, b) {return dir * strcmp(a, b);}
       }
       var rows = Array.prototype.slice.call(table.querySelectorAll("tr"), 1);
-      rows.sort(cmp);
-      rows.forEach(function(tr){table.appendChild(tr);});
+      rows.sort(function(a, b) {return cmp(parse(cellText(a.cells[column])),
+                                           parse(cellText(b.cells[column])));});
+      rows.forEach(function(tr) {table.appendChild(tr);});
     }
 
     // Wrapper for use as column header click handler.

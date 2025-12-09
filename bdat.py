@@ -14218,7 +14218,7 @@ class XCXDEResolver(CrossReferenceResolver):
                       r'SoulData\d+': FieldRef('BTL_SoulData')},
             row_name='Name'),
         'DRP_AffixTable': TableInfo(
-            re_xrefs={'AffixID_\d+': FieldRef(lookup=lookup_drop_affix)}),
+            re_xrefs={r'AffixID_\d+': FieldRef(lookup=lookup_drop_affix)}),
         'DRP_BoxTable': TableInfo(
             {'PartsName': TextRef('ITM_MaterialList_ms'),
              'LotRank': FieldRef('DRP_LotRankTable'),
@@ -14253,7 +14253,7 @@ class XCXDEResolver(CrossReferenceResolver):
         'DRP_PcWpnTable_Gold': TableInfo(
             re_xrefs={r'wpn\[\d+\]': FieldRef('DRP_ItemTable')}),
         'DRP_PcWpnTable_Silver': TableInfo(
-            re_xrefs={'wpn\[\d+\]': FieldRef('DRP_ItemTable')}),
+            re_xrefs={r'wpn\[\d+\]': FieldRef('DRP_ItemTable')}),
         'DRP_SilverBoxTable': TableInfo(
             re_xrefs={r'Item_\d+': FieldRef('DRP_ItemTable')}),
         'FLD_ConditionList_FNStat': TableInfo(

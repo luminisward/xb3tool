@@ -13039,6 +13039,9 @@ class XC3Resolver(CrossReferenceResolver):
              'Text5': TextRef('msg_kizuna_name')}),
         'FLD_UMonsterList': TableInfo(
             {'Zone': FieldRef('SYS_MapList')}),
+        'GMK_ComSpot': TableInfo(
+            {'SpotName': TextRef('msg_comspot_name')},
+            {'Text': TextRef('msg_comspot_text')}),
         'ITM_Accessory': TableInfo(
             {'Name': TextRef('msg_item_accessory'),
              'ForgeType': TableRef()},
@@ -13676,7 +13679,10 @@ class XCXDEResolver(CrossReferenceResolver):
         # Condition type is always in the previous column.
         type = table.get(row, field_idx-1)
         type_name = None
-        if type == 2:
+        if type == 1:
+            type_name = 'Npc'
+            ref_table = 'npc_union'
+        elif type == 2:
             type_name = 'Suppress'
             ref_table = 'FLD_QuestSuppress'
         elif type == 3:
@@ -13797,6 +13803,8 @@ class XCXDEResolver(CrossReferenceResolver):
             target_table = 'ITM_Blueprint'
         elif category == 66:
             target_table = 'ITM_InfoList'
+        elif category == 70:
+            target_table = 'BLH_PetList'
         else:
             return 'None'
         return tables[target_table]
@@ -13944,6 +13952,8 @@ class XCXDEResolver(CrossReferenceResolver):
         'condition5': FieldRef('FLD_GameCondition'),
         'gameCond': FieldRef('FLD_GameCondition'),
         'gameCondId': FieldRef('FLD_GameCondition'),
+        'balloonCond': FieldRef('FLD_GameCondition'),
+        'OrderCond': FieldRef('FLD_GameCondition'),
         # These are in FLD_TownInfo*, possibly a "negative condition" for each message
         'field_F55F6CD2': FieldRef('FLD_GameCondition'),
         'field_A9B2A981': FieldRef('FLD_GameCondition'),
@@ -14190,9 +14200,12 @@ class XCXDEResolver(CrossReferenceResolver):
         'CHR_EnParam': TableInfo(
             {'ResourceID': FieldRef('RSC_EnList')},
             re_xrefs={r'ArtsNum\d+': FieldRef('BTL_EnArtsList')}),
+        'CHR_EnPopParam': TableInfo(
+            {'WeatherCaption': TextRef('BTL_EnBook_Pop_ms')}),
         'DEF_DlList': TableInfo(
             {'Name': TextRef('CHR_DlList_ms'),
              'Caption': TextRef('CHR_DlList_ms'),
+             'Frame': FieldRef('CHR_DlList'),
              'Armor[0]': FieldRef('AMR_DlList'),
              'Armor[1]': FieldRef('AMR_DlList'),
              'Armor[2]': FieldRef('AMR_DlList'),
@@ -14235,7 +14248,7 @@ class XCXDEResolver(CrossReferenceResolver):
              'BronzeBox': FieldRef('DRP_BronzeBoxTable')},
             row_name='PartsName'),
         'DRP_BronzeBoxTable': TableInfo(
-            re_xrefs={r'Item_\d+': FieldRef('DRP_ItemTable')}),
+            re_xrefs={r'Item_\d+': FieldRef('ITM_MaterialList')}),
         'DRP_DlArmorTable_Gold': TableInfo(
             re_xrefs={r'armor\[\d+\]': FieldRef('DRP_ItemTable')}),
         'DRP_DlArmorTable_Silver': TableInfo(
@@ -14361,7 +14374,8 @@ class XCXDEResolver(CrossReferenceResolver):
         'FLD_PrcPopList': TableInfo(
             {'itm1ID': FieldRef(field='itm1Type', lookup=lookup_item)}),  # Note different spelling from the Litem* tables!
         'FLD_ProgressPopList': TableInfo(
-            {'targetCondId': FieldRef('FLD_GameCondition')}),
+            {'targetCondId': FieldRef('FLD_GameCondition')},
+            {'name_id': TextRef('FLD_ObjectName')}),
         'FLD_QuestCollect': TableInfo(
             {'item_id': FieldRef(field='ref_item_bdat', lookup=lookup_item)}),
         'FLD_QuestSuppress': TableInfo(
@@ -14372,7 +14386,11 @@ class XCXDEResolver(CrossReferenceResolver):
              'purpose2': FieldRef(lookup=lookup_QuestTask),
              'purpose_log2': TextRef('quest_ms'),
              'purpose3': FieldRef(lookup=lookup_QuestTask),
-             'purpose_log3': TextRef('quest_ms')}),
+             'purpose_log3': TextRef('quest_ms'),
+             'target1': FieldRef('FLD_TargetList'),
+             'target2': FieldRef('FLD_TargetList'),
+             'target3': FieldRef('FLD_TargetList')
+             }),
         'FLD_SkipTravel': TableInfo(
             {'zone_id': FieldRef(lookup=lookup_SkipTravel_zone),
              'loc_name': TextRef(None, lookup=lookup_SkipTravel_loc),
@@ -14494,7 +14512,16 @@ class XCXDEResolver(CrossReferenceResolver):
              'itm2ID': FieldRef('ITM_RareRscList'),
              'itm3ID': FieldRef('ITM_RareRscList'),
              'itm4ID': FieldRef('ITM_RareRscList'),
-             'itm5ID': FieldRef('ITM_RareRscList')},
+             'itm5ID': FieldRef('ITM_RareRscList'),
+             'connection[0]': FieldRef('FnetVeinList'),
+             'connection[1]': FieldRef('FnetVeinList'),
+             'connection[2]': FieldRef('FnetVeinList'),
+             'connection[3]': FieldRef('FnetVeinList'),
+             'sight[0]': FieldRef('FLD_Location'),
+             'sight[1]': FieldRef('FLD_Location'),
+             'sight[2]': FieldRef('FLD_Location'),
+             'sight[3]': FieldRef('FLD_Location'),
+             'sight[4]': FieldRef('FLD_Location')},
             row_name='name'),  # references FLD_Location.Loc_name
         'ITM_BattleItem': TableInfo(
             {'Name': TextRef('ITM_BattleItem_ms'),
@@ -14822,11 +14849,13 @@ class XCXDEResolver(CrossReferenceResolver):
              'QuestTable': FieldRef('SCL_QuestTableList'),
              'OrderCondition': FieldRef('FLD_GameCondition')}),
         'SCL_SquadProgressList': TableInfo(
-            re_xrefs={r'TaskID\d+': FieldRef('SCL_SquadTaskList')}),
+            re_xrefs={r'TaskID\d+': FieldRef('SCL_SquadTaskList'),
+                      r'TaskTxt\d+': FieldRef('MNU_CommonTelop')}),
         'SCL_SquadQuestList': TableInfo(
             {'title': TextRef('MultiQuest_Title_ms'),
              'summary': TextRef('MultiQuest_Summary_ms'),
              'task': FieldRef('SCL_SquadProgressList'),
+             'reward': FieldRef('SCL_SquadRewardList'),
              'PurposeTxt': TextRef('MultiQuest_Purpose_ms'),
              'weather': FieldRef('FLD_WeatherAsset'),
              'formationID': FieldRef('FLD_FormationList'),
@@ -14837,6 +14866,10 @@ class XCXDEResolver(CrossReferenceResolver):
              'enemyID2': FieldRef('CHR_EnList'),
              'enemyID3': FieldRef('CHR_EnList'),
              'enemyID4': FieldRef('CHR_EnList'),
+             'PartsEneID1': FieldRef('CHR_EnList'),
+             'PartsEneID2': FieldRef('CHR_EnList'),
+             'partseneid3': FieldRef('CHR_EnList'),
+             'partseneid4': FieldRef('CHR_EnList'),
              'Navi_Title': TextRef('MultiQuest_Navi_ms')}),
         'SCL_SquadTargetEnemy': TableInfo(
             {'GenusId': FieldRef('RSC_EnGenusList'),
@@ -14853,6 +14886,10 @@ class XCXDEResolver(CrossReferenceResolver):
             row_name='UnionName'),
         'SCL_WldEnReword': TableInfo(
             {'TargetEnemy': FieldRef('CHR_EnList')}),
+        'SEG_NormalList': TableInfo({
+            'info_title': TextRef('SEG_Segment_ms'),
+            'info_summary': TextRef('SEG_Segment_ms')
+            }),
         'SEG_ProbeList': TableInfo(
             {'vein_id': FieldRef('FnetVeinList'),
              'seg_term_id1': FieldRef(lookup=lookup_seg_term_id),

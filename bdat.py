@@ -13345,8 +13345,10 @@ class XC3Resolver(CrossReferenceResolver):
         'SYS_FlowEventDropInfoPiece': TableInfo(
             {'NPC': FieldRef('FLD_NpcList')}),
         'SYS_GimmickLocation': TableInfo(
+            {'field_6C50B44E': FieldRef('6EDF0096')},
             row_name='GimmickID'),
         'SYS_GimmickLocation_dlc04': TableInfo(
+            {'field_6C50B44E': FieldRef('6EDF0096')},
             row_name='GimmickID'),
         'SYS_GimmickPreparing': TableInfo(
             {'Gimmick': refset_gimmick}),

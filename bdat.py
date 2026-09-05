@@ -12102,7 +12102,36 @@ xc3_event_tables = ('EVT_listEv', 'EVT_listFev', 'EVT_listQst',
 
 class XC3Resolver(CrossReferenceResolver):
 
+    # Per-map special-action rule tables referenced by
+    # <map>_GMK_EnemyAff.Affordance.  These tables are unnamed in the
+    # original BDAT data, so the relationship cannot be inferred from a
+    # common table/field name.
+    enemy_affordance_tables = {
+        'ma01a': '268AE713',
+        'ma04a': '76FFBF3F',
+        'ma07a': 'DF81B4D2',
+        'ma09a': '55C603C7',
+        'ma11a': 'BF287371',
+        'ma15a': '02E2BD0D',
+        'ma17a': 'C9542E75',
+        'ma22a': '00CB2790',
+        'ma40a': 'B0CD2B01',
+        'ma44a': 'CABA4AB0',
+        'ma90a_ok_test': '91A646AF',
+        'ma90a_sz_test': 'B680C878',
+        'ma90a_ts_test': 'C152D367',
+        'ma90gmk': '0FF69724',
+    }
+
     ######## Value lookup functions
+
+    def lookup_enemy_affordance(tables, table, row, field_idx, id, ref):
+        suffix = '_GMK_EnemyAff'
+        if not table.name.endswith(suffix):
+            return 'None'
+        map_name = table.name[:-len(suffix)]
+        target_name = XC3Resolver.enemy_affordance_tables.get(map_name)
+        return tables.get(target_name, 'None') if target_name else 'None'
 
     def lookup_achievement(tables, table, row, field_idx, id, ref):
         type = table.get(row, table.field_index('AchieveType'))
@@ -12629,6 +12658,7 @@ class XC3Resolver(CrossReferenceResolver):
     }
 
     table_re_xrefs = {
+        r'.+_GMK_EnemyAff': {'Affordance': FieldRef(lookup=lookup_enemy_affordance)},
         'ma..a_GMK_Corpse': {'EventID': refset_event_name,
                              'Reward': FieldRef('ITM_RewardGrieve')},
         'ma..a_GMK_Event': {'Name': TextRef('msg_fld_searchpoint'),
@@ -13497,6 +13527,8 @@ class XC3Resolver(CrossReferenceResolver):
              'Contents4': FieldRef('7A6735C6')}),
         '6EC8096C': TableInfo(
             {'CookName': FieldRef('FLD_CookRecipe')}),
+        '6EDF0096': TableInfo(
+            {'Item': FieldRef('7729B35C')}),
         '70810224': TableInfo(
             {'Text1': TextRef('msg_autotalk'),
              'Text2': TextRef('msg_autotalk'),
